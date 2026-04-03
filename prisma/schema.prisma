@@ -1,0 +1,42 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Document {
+  id               String         @id
+  ownerId          String
+  displayName      String
+  contentType      String
+  storageKey       String         @unique
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime
+  originalFilename String
+  size             Int
+  status           DocumentStatus @default(PENDING)
+  User             User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([displayName])
+  @@index([ownerId])
+}
+
+model User {
+  id           String     @id
+  email        String     @unique
+  createdAt    DateTime   @default(now())
+  updatedAt   DateTime    @updatedAt @default(now())
+  passwordHash String
+  firstName    String
+  lastName     String
+  Document     Document[]
+}
+
+enum DocumentStatus {
+  PENDING
+  READY
+  FAILED
+}

@@ -1,13 +1,17 @@
 import {Button as PrimitiveButton} from "@/components/ui/button" 
+import {ButtonHTMLAttributes} from 'react'
 type ButtonProps = {
     children:string
+    type?: "submit" | "button" | "reset"
 }
 
-function Button({children
+function Button({
+    type,
+    children
 
 }:ButtonProps ){
     return (
-        <PrimitiveButton className="py-4 px-10 hover:bg-red-500 font-medium cursor-pointer"> {children}</PrimitiveButton>
+        <PrimitiveButton type = {type} className="py-4 px-10 hover:bg-red-500 font-medium cursor-pointer"> {children}</PrimitiveButton>
     )
 }
 

@@ -1,7 +1,6 @@
-export async function GET() {
-  return Response.json({ message: "Auth.js handler placeholder" });
-}
+import NextAuth from "next-auth";
+import authOptions from "@/lib/auth";
 
-export async function POST() {
-  return Response.json({ message: "Auth.js handler placeholder" });
-}
+const handler = NextAuth(authOptions as any);
+
+export { handler as GET, handler as POST };

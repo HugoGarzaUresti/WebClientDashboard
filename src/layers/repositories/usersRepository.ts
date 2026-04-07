@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { randomUUID } from "crypto";
 
 export const usersRepository = {
     async createUser(data: {
@@ -9,6 +10,7 @@ export const usersRepository = {
     }) {
         return prisma.user.create({
             data: {
+                id: randomUUID(),
                 email: data.email,
                 firstName: data.firstName,
                 lastName: data.lastName,

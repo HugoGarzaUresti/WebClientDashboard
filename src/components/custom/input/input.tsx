@@ -1,24 +1,31 @@
-import {Input as PrimitiveInput} from "@/components/ui/input"
-import {ChangeEventHandler} from "react"
+import React, { type ChangeEventHandler } from "react";
+import { Input as PrimitiveInput } from "@/components/ui/input";
 
-type InputProps = {
-    id?:string
-    placeholder?:string
-    type?:string
-    value?:string
-    onChange?: ChangeEventHandler<HTMLInputElement>
-}
+type InputProps = React.ComponentProps<"input"> & {
+  id?: string;
+  placeholder?: string;
+  type?: string;
+  value?: string;
+  onChange?: ChangeEventHandler<HTMLInputElement>;
+};
 
-function Input({
-    id,
-    placeholder,
-    value,
-    onChange,
-    type
-}:InputProps ){
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ id, placeholder, value, onChange, type, className, ...props }, ref) => {
     return (
-        <PrimitiveInput id = {id} placeholder={placeholder} type={type} value={value} onChange={onChange} className="py-6 placeholder:text-gray-400! bg-white text-black!"></PrimitiveInput>
-    )
-}
+      <PrimitiveInput
+        id={id}
+        placeholder={placeholder}
+        type={type}
+        value={value}
+        onChange={onChange}
+        className={`${className ?? ""} py-6`}
+        ref={ref}
+        {...props}
+      />
+    );
+  },
+);
 
-export {Input}
+Input.displayName = "Input";
+
+export { Input };

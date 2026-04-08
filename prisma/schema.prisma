@@ -17,7 +17,7 @@ model Document {
   originalFilename String
   size             Int
   status           DocumentStatus @default(PENDING)
-  User             User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  User             User           @relation(fields: [ownerId], references: [id], onDelete: Cascade) 
 
   @@index([displayName])
   @@index([ownerId])

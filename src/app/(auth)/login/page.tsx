@@ -1,8 +1,7 @@
 "use client";
 
-import { ChangeEvent, SubmitEventHandler, useState } from "react";
+import { ChangeEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
 import { Button } from "@/components/custom/button";
 import { Input } from "@/components/custom/input";
 import Link from "next/link";
@@ -18,18 +17,31 @@ export default function LoginPage() {
     e?.preventDefault();
     setError(null);
     setLoading(true);
-    const res = await signIn("credentials", {
-      redirect: false,
-      email,
-      password,
-    } as any);
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        password,
+        callbackUrl: "/dashboard",
+      }),
+    });
+    const res = (await response.json()) as {
+      ok?: boolean;
+      error?: string | null;
+      url?: string | null;
+    };
 
     setLoading(false);
 
     if (!res) return setError("Unexpected error");
-    if ((res as any).error) return setError((res as any).error as string);
+    if (!response.ok || res.error) {
+      return setError(res.error || "Unable to log in");
+    }
 
-    router.push("/");
+    router.push(res.url || "/dashboard");
   }
 
   return (
@@ -72,7 +84,7 @@ export default function LoginPage() {
                 href="/register"
                 className="text-muted-foreground p-1 hover:underline "
               >
-                Don't have an account yet? Register here
+                Don&apos;t have an account yet? Register here
               </Link>
             </div>
             {error ? <div className="text-red-600">{error}</div> : null}

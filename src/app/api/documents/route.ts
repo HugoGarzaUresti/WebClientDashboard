@@ -9,15 +9,24 @@ export const POST = async (req: Request) => {
   const file = form.get("file") as File;
 
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  if (!session?.user?.id) {
+    console.log("This is the session:", session);
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   const ownerId = session.user.id;
 
   const doc = await documentsService.createAndSaveDocument({
     ownerId: session.user.id,
     file,
     originalFilename: (form.get("originalFilename") as string) ?? file?.name,
-    contentType: (form.get("contentType") as string) ?? file?.type ?? "application/octet-stream",
-    size: Number(form.get("size") ?? (file ? (await file.arrayBuffer()).byteLength : 0)),
+    contentType:
+      (form.get("contentType") as string) ??
+      file?.type ??
+      "application/octet-stream",
+    size: Number(
+      form.get("size") ?? (file ? (await file.arrayBuffer()).byteLength : 0),
+    ),
   });
 
   return NextResponse.json({ document: doc });

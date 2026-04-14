@@ -31,8 +31,14 @@ export const documentsRepository = {
       data: { status: "READY", updatedAt: new Date() },
     });
   },
-  
-    async getById(id: string) {
+
+  async getById(id: string) {
     return prisma.document.findUnique({ where: { id } });
-  }
+  },
+  async getAllByOwnerId(ownerId: string) {
+    return await prisma.document.findMany({
+      where: { ownerId },
+      orderBy: { createdAt: "desc" },
+    });
+  },
 };

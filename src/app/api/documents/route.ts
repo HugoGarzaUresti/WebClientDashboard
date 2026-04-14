@@ -28,6 +28,27 @@ export const POST = async (req: Request) => {
       form.get("size") ?? (file ? (await file.arrayBuffer()).byteLength : 0),
     ),
   });
-
+  console.log(session);
   return NextResponse.json({ document: doc });
+};
+
+export const GET = async (req: Request) => {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    console.log("This is the session:", session);
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const ownerId = session.user.id;
+
+  try {
+    const doc = await documentsService.getAllDocumentsByOwnerId(ownerId);
+    return NextResponse.json({ documents: doc });
+  } catch (error) {
+    console.error("GET /api/documents error:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
+  }
 };

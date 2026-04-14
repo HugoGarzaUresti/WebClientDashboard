@@ -64,4 +64,15 @@ export const documentsService = {
       throw err;
     }
   },
+
+  async getAllDocumentsByOwnerId(ownerId: string) {
+    try {
+      const documents = await documentsRepository.getAllByOwnerId(ownerId);
+
+      return documents;
+    } catch (err) {
+      console.error("documentsService.getAllDocumentsByOwnerId error:", err);
+      throw err;
+    }
+  },
 };

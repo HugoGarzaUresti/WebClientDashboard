@@ -14,10 +14,12 @@ type ThemeContextValue = {
 
 type ThemeProviderProps = {
   children: React.ReactNode
+  initialTheme?: Theme
 }
 
 const systemDarkModeQuery = "(prefers-color-scheme: dark)"
 const themeStorageKey = "clientdocs-theme"
+const themeCookieMaxAge = 60 * 60 * 24 * 365
 
 const ThemeContext = React.createContext<ThemeContextValue | null>(null)
 
@@ -51,11 +53,27 @@ function applyTheme(resolvedTheme: ResolvedTheme) {
   root.style.colorScheme = resolvedTheme
 }
 
-export function ThemeProvider({ children }: ThemeProviderProps) {
-  const [theme, setThemeState] = React.useState<Theme>("system")
-  const [resolvedTheme, setResolvedTheme] =
-    React.useState<ResolvedTheme>("light")
-  const themeRef = React.useRef<Theme>("system")
+function persistTheme(theme: Theme) {
+  if (theme === "system") {
+    window.localStorage.removeItem(themeStorageKey)
+    document.cookie = `${themeStorageKey}=; path=/; max-age=0; SameSite=Lax`
+    return
+  }
+
+  window.localStorage.setItem(themeStorageKey, theme)
+  document.cookie =
+    `${themeStorageKey}=${theme}; path=/; max-age=${themeCookieMaxAge}; SameSite=Lax`
+}
+
+export function ThemeProvider({
+  children,
+  initialTheme = "system",
+}: ThemeProviderProps) {
+  const [theme, setThemeState] = React.useState<Theme>(initialTheme)
+  const [resolvedTheme, setResolvedTheme] = React.useState<ResolvedTheme>(
+    initialTheme === "system" ? "light" : initialTheme,
+  )
+  const themeRef = React.useRef<Theme>(initialTheme)
 
   const syncTheme = React.useEffectEvent(
     (nextTheme: Theme, systemTheme: ResolvedTheme) => {
@@ -69,13 +87,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   function setTheme(nextTheme: Theme) {
     themeRef.current = nextTheme
     setThemeState(nextTheme)
-
-    if (nextTheme === "system") {
-      window.localStorage.removeItem(themeStorageKey)
-    } else {
-      window.localStorage.setItem(themeStorageKey, nextTheme)
-    }
-
+    persistTheme(nextTheme)
     syncTheme(nextTheme, getSystemTheme())
   }
 

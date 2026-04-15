@@ -31,6 +31,8 @@ export default async function DashboardPage() {
     originalFilename: document.originalFilename,
     size: document.size,
     status: document.status,
+    userFirstName: document.User.firstName,
+    userLastName: document.User.lastName,
   }));
 
   return <DashboardDocumentsView documents={initialDocuments} />;

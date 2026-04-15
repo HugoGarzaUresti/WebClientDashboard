@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import Script from "next/script";
+import { cookies } from "next/headers";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { Poppins, Roboto_Mono } from "next/font/google";
 
@@ -15,6 +15,8 @@ type RootLayoutProps = {
   children: ReactNode;
 };
 
+type ThemePreference = "system" | "light" | "dark";
+
 const fontSans = Poppins({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
@@ -27,32 +29,27 @@ const fontMono = Roboto_Mono({
   variable: "--font-mono",
 });
 
-export default function RootLayout({ children }: RootLayoutProps) {
+export default async function RootLayout({ children }: RootLayoutProps) {
+  const cookieStore = await cookies();
+  const storedTheme = cookieStore.get("clientdocs-theme")?.value;
+  const initialTheme: ThemePreference =
+    storedTheme === "light" || storedTheme === "dark" ? storedTheme : "system";
+
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <Script id="system-theme-init" strategy="beforeInteractive">
-          {`
-            (function () {
-              var storedTheme = localStorage.getItem("clientdocs-theme");
-              var theme =
-                storedTheme === "light" || storedTheme === "dark"
-                  ? storedTheme
-                  : window.matchMedia("(prefers-color-scheme: dark)").matches
-                    ? "dark"
-                    : "light";
-              var root = document.documentElement;
-              root.classList.toggle("dark", theme === "dark");
-              root.classList.toggle("light", theme === "light");
-              root.style.colorScheme = theme;
-            })();
-          `}
-        </Script>
-      </head>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={initialTheme === "system" ? undefined : initialTheme}
+      style={
+        initialTheme === "system"
+          ? undefined
+          : { colorScheme: initialTheme }
+      }
+    >
       <body
         className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased`}
       >
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider initialTheme={initialTheme}>{children}</ThemeProvider>
       </body>
     </html>
   );

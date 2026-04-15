@@ -7,11 +7,14 @@ export async function POST(req: Request) {
     const user = await usersService.register(body);
 
     return NextResponse.json(user);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(error);
-    const status = error?.message === "Missing required fields" ? 400 : 500;
+    const message =
+      error instanceof Error ? error.message : "Something went wrong";
+    const status = message === "Missing required fields" ? 400 : 500;
+
     return NextResponse.json(
-      { error: status === 400 ? error.message : "Something went wrong" },
+      { error: status === 400 ? message : "Something went wrong" },
       { status }
     );
   }

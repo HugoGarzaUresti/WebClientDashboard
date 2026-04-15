@@ -18,7 +18,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         type={type}
         value={value}
         onChange={onChange}
-        className={`${className ?? ""} py-6`}
+        className={`${className ?? ""} py-6 placeholder:text `}
         ref={ref}
         {...props}
       />

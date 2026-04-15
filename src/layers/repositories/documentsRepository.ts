@@ -37,6 +37,14 @@ export const documentsRepository = {
   },
   async getAllByOwnerId(ownerId: string) {
     return await prisma.document.findMany({
+      include: {
+        User: {
+          select: {
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
       where: { ownerId },
       orderBy: { createdAt: "desc" },
     });

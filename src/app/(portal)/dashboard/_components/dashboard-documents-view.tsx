@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   DownloadIcon,
@@ -44,6 +44,8 @@ export type DashboardDocument = {
   originalFilename: string;
   size: number;
   status: string;
+  userFirstName: string;
+  userLastName: string;
 };
 
 type DashboardDocumentsViewProps = {
@@ -63,12 +65,13 @@ const portalSidebarItems = [
   },
 ] as const;
 
-const uploadDateFormatter = new Intl.DateTimeFormat(undefined, {
+const uploadDateFormatter = new Intl.DateTimeFormat("en-US", {
   month: "short",
   day: "numeric",
   year: "numeric",
   hour: "numeric",
   minute: "2-digit",
+  timeZone: "America/Mexico_City",
 });
 
 function getFilenameFromDisposition(contentDisposition: string | null) {
@@ -115,11 +118,7 @@ function formatDocumentType(document: DashboardDocument) {
     return "FILE";
   }
 
-  return subtype
-    .split(".")
-    .pop()
-    ?.split("+")[0]
-    ?.toUpperCase() ?? "FILE";
+  return subtype.split(".").pop()?.split("+")[0]?.toUpperCase() ?? "FILE";
 }
 
 function formatDocumentStatus(status: string) {
@@ -155,22 +154,17 @@ export function DashboardDocumentsView({
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [isRefreshing, startRefreshTransition] = useTransition();
 
-  useEffect(() => {
-    setSelectedIds((currentSelection) =>
-      currentSelection.filter((id) =>
-        documents.some((document) => document.id === id),
-      ),
-    );
-  }, [documents]);
+  const documentIds = new Set(documents.map((document) => document.id));
+  const validSelectedIds = selectedIds.filter((id) => documentIds.has(id));
 
   const selectedDocuments = documents.filter((document) =>
-    selectedIds.includes(document.id),
+    validSelectedIds.includes(document.id),
   );
   const hasDocuments = documents.length > 0;
   const allDocumentsSelected =
-    hasDocuments && selectedIds.length === documents.length;
+    hasDocuments && validSelectedIds.length === documents.length;
   const someDocumentsSelected =
-    selectedIds.length > 0 && !allDocumentsSelected;
+    validSelectedIds.length > 0 && !allDocumentsSelected;
   const isBusy = isDownloading || isUploading || isRefreshing;
 
   function toggleAllDocuments(checked: boolean | "indeterminate") {
@@ -184,15 +178,19 @@ export function DashboardDocumentsView({
     checked: boolean | "indeterminate",
   ) {
     setSelectedIds((currentSelection) => {
+      const currentValidSelection = currentSelection.filter((id) =>
+        documentIds.has(id),
+      );
+
       if (checked === true) {
-        if (currentSelection.includes(documentId)) {
-          return currentSelection;
+        if (currentValidSelection.includes(documentId)) {
+          return currentValidSelection;
         }
 
-        return [...currentSelection, documentId];
+        return [...currentValidSelection, documentId];
       }
 
-      return currentSelection.filter((id) => id !== documentId);
+      return currentValidSelection.filter((id) => id !== documentId);
     });
   }
 
@@ -380,14 +378,14 @@ export function DashboardDocumentsView({
                         My Documents
                       </h1>
                       <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-                        Manage your uploads, review document status, and download
-                        selected files from one place.
+                        Manage your uploads, review document status, and
+                        download selected files from one place.
                       </p>
                     </div>
 
                     <Badge variant="secondary" className="w-fit px-3 py-1.5">
-                      {selectedIds.length > 0
-                        ? `${selectedIds.length} selected`
+                      {validSelectedIds.length > 0
+                        ? `${validSelectedIds.length} selected`
                         : `${documents.length} total`}
                     </Badge>
                   </div>
@@ -469,7 +467,7 @@ export function DashboardDocumentsView({
                         <TableHead>Size</TableHead>
                         <TableHead>Upload date</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Owner name</TableHead>
+                        <TableHead>Owner</TableHead>
                       </TableRow>
                     </TableHeader>
 
@@ -486,8 +484,8 @@ export function DashboardDocumentsView({
                                   No documents uploaded yet
                                 </p>
                                 <p className="max-w-md text-sm leading-6 text-muted-foreground">
-                                  Upload your first file to start building out your
-                                  document dashboard.
+                                  Upload your first file to start building out
+                                  your document dashboard.
                                 </p>
                               </div>
                             </div>
@@ -495,7 +493,9 @@ export function DashboardDocumentsView({
                         </TableRow>
                       ) : (
                         documents.map((document) => {
-                          const isSelected = selectedIds.includes(document.id);
+                          const isSelected = validSelectedIds.includes(
+                            document.id,
+                          );
 
                           return (
                             <TableRow
@@ -509,7 +509,10 @@ export function DashboardDocumentsView({
                                   checked={isSelected}
                                   disabled={isBusy}
                                   onCheckedChange={(checked) => {
-                                    toggleDocumentSelection(document.id, checked);
+                                    toggleDocumentSelection(
+                                      document.id,
+                                      checked,
+                                    );
                                   }}
                                 />
                               </TableCell>
@@ -540,7 +543,9 @@ export function DashboardDocumentsView({
                                 {formatUploadDate(document.createdAt)}
                               </TableCell>
                               <TableCell>
-                                <Badge variant={getStatusVariant(document.status)}>
+                                <Badge
+                                  variant={getStatusVariant(document.status)}
+                                >
                                   {formatDocumentStatus(document.status)}
                                 </Badge>
                               </TableCell>
@@ -549,7 +554,9 @@ export function DashboardDocumentsView({
                                   className="block truncate font-mono text-xs text-muted-foreground"
                                   title={document.ownerId}
                                 >
-                                  {document.ownerId}
+                                  {document.userFirstName +
+                                    " " +
+                                    document.userLastName}
                                 </span>
                               </TableCell>
                             </TableRow>

@@ -49,7 +49,7 @@ export default function LoginPage() {
       <div className="bg-background items-center justify-center md:flex flex-col gap-8 col-span-1 hidden">
         <h1 className="text-foreground text-3xl font-bold">Log in</h1>
       </div>
-      <div className="h-full bg-secondary gap-8 flex flex-col items-center justify-center col-span-3 md:col-span-2">
+      <div className="h-full bg-foreground gap-8 flex flex-col items-center justify-center col-span-3 md:col-span-2">
         <div className="h-1/4 flex items-center justify-center">
           <h1 className="font-bold text-2xl self-end">Typeshit</h1>
         </div>
@@ -59,6 +59,7 @@ export default function LoginPage() {
             onSubmit={handleLoginForm}
           >
             <Input
+              className="placeholder:text-secondary-foreground"
               id="email"
               type="email"
               placeholder="Email"
@@ -68,6 +69,7 @@ export default function LoginPage() {
               }
             />
             <Input
+              className="placeholder:text-secondary-foreground"
               id="password"
               type="password"
               placeholder="Password"

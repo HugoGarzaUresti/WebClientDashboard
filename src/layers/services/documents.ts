@@ -1,7 +1,8 @@
 import { documentsRepository } from "@/layers/repositories/documentsRepository";
+import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { randomUUID } from "crypto";
 import path from "path";
-import { promises as fs } from "fs";
+import { getStorageBucket, s3 } from "@/lib/s3";
 
 export const documentsService = {
   async createAndSaveDocument(input: {
@@ -17,14 +18,18 @@ export const documentsService = {
       const fileNameOnDisk = `${id}-${safeFilename}`;
       const storageKey = `${input.ownerId}/${fileNameOnDisk}`;
 
-      const uploadsDir = path.join(process.cwd(), "uploads");
-      const filePath = path.join(uploadsDir, input.ownerId, fileNameOnDisk);
-
-      await fs.mkdir(path.dirname(filePath), { recursive: true });
-
       const arrayBuffer = await input.file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
-      await fs.writeFile(filePath, buffer);
+
+      await s3.send(
+        new PutObjectCommand({
+          Bucket: getStorageBucket(),
+          Key: storageKey,
+          Body: buffer,
+          ContentLength: input.size,
+          ContentType: input.contentType,
+        }),
+      );
 
       return documentsRepository.createDocument({
         ownerId: input.ownerId,
@@ -48,15 +53,28 @@ export const documentsService = {
         return null;
       }
 
-      const filePath = path.join(process.cwd(), "uploads", document.storageKey);
-      const fileBuffer = await fs.readFile(filePath);
+      const response = await s3.send(
+        new GetObjectCommand({
+          Bucket: getStorageBucket(),
+          Key: document.storageKey,
+        }),
+      );
+
+      if (!response.Body) {
+        return null;
+      }
+
+      const fileBuffer = Buffer.from(await response.Body.transformToByteArray());
 
       return {
         document,
         fileBuffer,
       };
     } catch (err) {
-      if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+      if (
+        (err as { name?: string }).name === "NoSuchKey" ||
+        (err as { name?: string }).name === "NotFound"
+      ) {
         return null;
       }
 
